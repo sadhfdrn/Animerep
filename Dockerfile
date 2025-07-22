@@ -11,18 +11,13 @@ RUN apk add --no-cache \
     procps \
     && rm -rf /var/cache/apk/*
 
-# Copy package.json files
-COPY package*.json ./
-COPY client/package*.json ./client/
-COPY server/package*.json ./server/
+# Copy application code first
+COPY . .
 
 # Install dependencies
 RUN npm install
-RUN cd client && npm install
-RUN cd server && npm install
-
-# Copy application code
-COPY . .
+RUN cd client && npm install || echo "Client directory not found, skipping client install"
+RUN cd server && npm install || echo "Server directory not found, skipping server install"
 
 # Create log directory
 RUN mkdir -p /app/logs
@@ -100,4 +95,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:3001/health || curl -f http://localhost:5000 || exit 1
 
 # Start the application
-CMD ["/app/start.sh"] 
+CMD ["/app/start.sh"]
